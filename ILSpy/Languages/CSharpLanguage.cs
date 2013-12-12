@@ -427,11 +427,11 @@ namespace ICSharpCode.ILSpy
 		{
 			var files = assembly.MainModule.Types.Where(t => IncludeTypeWhenDecompilingProject(t, options)).GroupBy(
 				delegate(TypeDefinition type) {
-					string file = TextView.DecompilerTextView.CleanUpName(type.Name) + this.FileExtension;
+					string file = TextView.DecompilerTextView.CleanUpName(type.Name, true) + this.FileExtension;
 					if (string.IsNullOrEmpty(type.Namespace)) {
 						return file;
 					} else {
-						string dir = TextView.DecompilerTextView.CleanUpName(type.Namespace);
+						string dir = TextView.DecompilerTextView.CleanUpName(type.Namespace, true);
 						if (directories.Add(dir))
 							Directory.CreateDirectory(Path.Combine(options.SaveAsProjectDirectory, dir));
 						return Path.Combine(dir, file);
@@ -474,15 +474,15 @@ namespace ICSharpCode.ILSpy
 						}
 						if (rs != null && rs.All(e => e.Value is Stream)) {
 							foreach (var pair in rs) {
-								fileName = Path.Combine(((string)pair.Key).Split('/').Select(p => TextView.DecompilerTextView.CleanUpName(p)).ToArray());
+								fileName = Path.Combine(((string)pair.Key).Split('/').Select(p => TextView.DecompilerTextView.CleanUpName(p, true)).ToArray());
 								string dirName = Path.GetDirectoryName(fileName);
 								if (!string.IsNullOrEmpty(dirName) && directories.Add(dirName)) {
 									Directory.CreateDirectory(Path.Combine(options.SaveAsProjectDirectory, dirName));
 								}
 								Stream entryStream = (Stream)pair.Value;
-								entryStream.Position = 0;
 								if (fileName.EndsWith(".baml", StringComparison.OrdinalIgnoreCase)) {
 									MemoryStream ms = new MemoryStream();
+									entryStream.Position = 0;
 									entryStream.CopyTo(ms);
 									// TODO implement extension point
 //									var decompiler = Baml.BamlResourceEntryNode.CreateBamlDecompilerInAppDomain(ref bamlDecompilerAppDomain, assembly.FileName);
@@ -497,7 +497,9 @@ namespace ICSharpCode.ILSpy
 //										continue;
 //									}
 								}
-								using (FileStream fs = new FileStream(Path.Combine(options.SaveAsProjectDirectory, fileName), FileMode.Create, FileAccess.Write)) {
+								entryStream.Position = 0;
+								using (FileStream fs = new FileStream(Path.Combine(options.SaveAsProjectDirectory, fileName), FileMode.Create, FileAccess.Write))
+								{
 									entryStream.CopyTo(fs);
 								}
 								yield return Tuple.Create("Resource", fileName);
@@ -521,12 +523,12 @@ namespace ICSharpCode.ILSpy
 		string GetFileNameForResource(string fullName, HashSet<string> directories)
 		{
 			string[] splitName = fullName.Split('.');
-			string fileName = TextView.DecompilerTextView.CleanUpName(fullName);
+			string fileName = TextView.DecompilerTextView.CleanUpName(fullName, true);
 			for (int i = splitName.Length - 1; i > 0; i--) {
 				string ns = string.Join(".", splitName, 0, i);
 				if (directories.Contains(ns)) {
 					string name = string.Join(".", splitName, i, splitName.Length - i);
-					fileName = Path.Combine(ns, TextView.DecompilerTextView.CleanUpName(name));
+					fileName = Path.Combine(ns, TextView.DecompilerTextView.CleanUpName(name, true));
 					break;
 				}
 			}

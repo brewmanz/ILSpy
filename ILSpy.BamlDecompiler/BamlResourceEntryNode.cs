@@ -117,7 +117,8 @@ namespace ILSpy.BamlDecompiler
 			
 			var removableAttrs = new List<XAttribute>();
 			var addableAttrs = new List<XAttribute>();
-			foreach (var attr in element.Attributes(XName.Get("ConnectionId", XmlBamlReader.XWPFNamespace))) {
+			foreach (var attr in element.Attributes(XName.Get("ConnectionId", XmlBamlReader.XWPFNamespace))) 
+				{
 				int id;
 				if (int.TryParse(attr.Value, out id) && eventMappings.ContainsKey(id)) {
 					var map = eventMappings[id];
@@ -131,6 +132,12 @@ namespace ILSpy.BamlDecompiler
 					}
 					removableAttrs.Add(attr);
 				}
+#if true // brewmanz
+				else if (attr.Name.LocalName == "ConnectionId")// remove ConnectionId anyway??
+				{
+					removableAttrs.Add(attr);
+				}
+#endif
 			}
 			foreach (var attr in removableAttrs)
 				attr.Remove();

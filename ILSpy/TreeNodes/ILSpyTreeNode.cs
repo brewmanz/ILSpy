@@ -25,6 +25,9 @@ using ICSharpCode.TreeView;
 
 namespace ICSharpCode.ILSpy.TreeNodes
 {
+	public interface IDecompilerTextView
+	{
+	}
 	/// <summary>
 	/// Base class of all ILSpy tree nodes.
 	/// </summary>

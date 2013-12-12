@@ -92,7 +92,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 						if (type == FileType.Xml)
 							ext = ".xml";
 						else
-							ext = Path.GetExtension(DecompilerTextView.CleanUpName(er.Name));
+							ext = Path.GetExtension(DecompilerTextView.CleanUpName(er.Name, true));
 						textView.ShowNode(output, this, HighlightingManager.Instance.GetDefinitionByExtension(ext));
 						return true;
 					}
@@ -106,7 +106,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			EmbeddedResource er = r as EmbeddedResource;
 			if (er != null) {
 				SaveFileDialog dlg = new SaveFileDialog();
-				dlg.FileName = DecompilerTextView.CleanUpName(er.Name);
+				dlg.FileName = DecompilerTextView.CleanUpName(er.Name, true);
 				if (dlg.ShowDialog() == true) {
 					Stream s = er.GetResourceStream();
 					s.Position = 0;

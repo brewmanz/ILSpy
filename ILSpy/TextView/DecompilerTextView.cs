@@ -663,7 +663,7 @@ namespace ICSharpCode.ILSpy.TextView
 			SaveFileDialog dlg = new SaveFileDialog();
 			dlg.DefaultExt = language.FileExtension;
 			dlg.Filter = language.Name + "|*" + language.FileExtension + "|All Files|*.*";
-			dlg.FileName = CleanUpName(treeNodes.First().ToString()) + language.FileExtension;
+			dlg.FileName = CleanUpName(treeNodes.First().ToString(), true) + language.FileExtension;
 			if (dlg.ShowDialog() == true) {
 				SaveToDisk(new DecompilationContext(language, treeNodes.ToArray(), options), dlg.FileName);
 			}
@@ -746,7 +746,7 @@ namespace ICSharpCode.ILSpy.TextView
 		/// <summary>
 		/// Cleans up a node name for use as a file name.
 		/// </summary>
-		internal static string CleanUpName(string text)
+		internal static string CleanUpName(string text, bool changePercent20)
 		{
 			int pos = text.IndexOf(':');
 			if (pos > 0)
@@ -757,6 +757,8 @@ namespace ICSharpCode.ILSpy.TextView
 			text = text.Trim();
 			foreach (char c in Path.GetInvalidFileNameChars())
 				text = text.Replace(c, '-');
+			if(changePercent20)
+				text = text.Replace(@"%20", @" ");	// change "My%20Path" to "My Path"
 			return text;
 		}
 		#endregion
