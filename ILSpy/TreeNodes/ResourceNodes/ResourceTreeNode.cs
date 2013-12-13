@@ -76,7 +76,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 			}
 		}
 		
-		public override bool View(DecompilerTextView textView)
+		public override bool View(IDecompilerTextView textView)
 		{
 			EmbeddedResource er = r as EmbeddedResource;
 			if (er != null) {

@@ -304,36 +304,37 @@ namespace ICSharpCode.ILSpy.VB
 									Directory.CreateDirectory(Path.Combine(options.SaveAsProjectDirectory, dirName));
 								}
 								Stream entryStream = (Stream)pair.Value;
-								if (fileName.EndsWith(".baml", StringComparison.OrdinalIgnoreCase)) {
+								if (fileName.EndsWith(".baml", StringComparison.OrdinalIgnoreCase))
+								{
 									MemoryStream ms = new MemoryStream();
 									entryStream.Position = 0;
 									entryStream.CopyTo(ms);
 									// TODO implement extension point
 #if true // brewmanz
 									ms.Position = 0;
-									// ILSpy.BamlDecompiler.BamlResourceEntryNode bren = null;
+									string xaml = "(failed)";
 									ICSharpCode.ILSpy.TreeNodes.ILSpyTreeNode tn = ICSharpCode.ILSpy.TreeNodes.ResourceEntryNode.Create((string)pair.Key, ms);
-									ICSharpCode.Decompiler.PlainTextOutput ito = new PlainTextOutput();
-									tn.Decompile(this, ito, new DecompilationOptions() { TextViewState = null });
-									//List<ICSharpCode.ILSpy.TreeNodes.ILSpyTreeNode> nodes = new List<TreeNodes.ILSpyTreeNode>(1);
-									//nodes.Add(tn);
-									//ICSharpCode.ILSpy.TextView.DecompilerTextView decompilerTextView = new TextView.DecompilerTextView();
-									//decompilerTextView.Decompile(this, nodes, new DecompilationOptions() { TextViewState = null });
-									string str = ito.ToString();
-									System.Diagnostics.Debug.WriteLine(string.Format("tn({0}).Decompile > {1}", tn.GetType().FullName, str));
-
+									ICSharpCode.ILSpy.TreeNodes.IHasEmbeddedXDocument hexd = tn as ICSharpCode.ILSpy.TreeNodes.IHasEmbeddedXDocument;
+									if (hexd != null)
+										xaml = hexd.GetEmbeddedXDocument(assembly).ToString();
+									if (xaml != null)
+									{
+										File.WriteAllText(Path.Combine(options.SaveAsProjectDirectory, Path.ChangeExtension(fileName, ".xaml")), xaml);
+										yield return Tuple.Create("Page", Path.ChangeExtension(fileName, ".xaml"));
+										continue;
+									}
 #endif
-//									var decompiler = Baml.BamlResourceEntryNode.CreateBamlDecompilerInAppDomain(ref bamlDecompilerAppDomain, assembly.FileName);
-//									string xaml = null;
-//									try {
-//										xaml = decompiler.DecompileBaml(ms, assembly.FileName, new ConnectMethodDecompiler(assembly), new AssemblyResolver(assembly));
-//									}
-//									catch (XamlXmlWriterException) { } // ignore XAML writer exceptions
-//									if (xaml != null) {
-//										File.WriteAllText(Path.Combine(options.SaveAsProjectDirectory, Path.ChangeExtension(fileName, ".xaml")), xaml);
-//										yield return Tuple.Create("Page", Path.ChangeExtension(fileName, ".xaml"));
-//										continue;
-//									}
+									//									var decompiler = Baml.BamlResourceEntryNode.CreateBamlDecompilerInAppDomain(ref bamlDecompilerAppDomain, assembly.FileName);
+									//									string xaml = null;
+									//									try {
+									//										xaml = decompiler.DecompileBaml(ms, assembly.FileName, new ConnectMethodDecompiler(assembly), new AssemblyResolver(assembly));
+									//									}
+									//									catch (XamlXmlWriterException) { } // ignore XAML writer exceptions
+									//									if (xaml != null) {
+									//										File.WriteAllText(Path.Combine(options.SaveAsProjectDirectory, Path.ChangeExtension(fileName, ".xaml")), xaml);
+									//										yield return Tuple.Create("Page", Path.ChangeExtension(fileName, ".xaml"));
+									//										continue;
+									//									}
 								}
 								entryStream.Position = 0;
 								using (FileStream fs = new FileStream(Path.Combine(options.SaveAsProjectDirectory, fileName), FileMode.Create, FileAccess.Write))
@@ -422,7 +423,7 @@ namespace ICSharpCode.ILSpy.VB
 		{
 			astBuilder.RunTransformations(transformAbortCondition);
 			if (options.DecompilerSettings.ShowXmlDocumentation)
-				AddXmlDocTransform.Run(astBuilder.CompilationUnit);
+				AddXmlDocTransform.Run(astBuilder.CompilationUnit, false);
 			var csharpUnit = astBuilder.CompilationUnit;
 			csharpUnit.AcceptVisitor(new NRefactory.CSharp.InsertParenthesesVisitor() { InsertParenthesesForReadability = true });
 			var unit = csharpUnit.AcceptVisitor(new CSharpToVBConverterVisitor(new ILSpyEnvironmentProvider()), null);

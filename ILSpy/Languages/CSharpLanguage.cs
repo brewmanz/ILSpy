@@ -215,7 +215,7 @@ namespace ICSharpCode.ILSpy
 				additionalTransform.Run(astBuilder.CompilationUnit);
 			}
 			if (options.DecompilerSettings.ShowXmlDocumentation) {
-				AddXmlDocTransform.Run(astBuilder.CompilationUnit);
+				AddXmlDocTransform.Run(astBuilder.CompilationUnit, false);
 			}
 			astBuilder.GenerateCode(output);
 		}

@@ -18,13 +18,14 @@ using Ricciolo.StylesExplorer.MarkupReflection;
 
 namespace ILSpy.BamlDecompiler
 {
-	public sealed class BamlResourceEntryNode : ResourceEntryNode
+	public sealed class BamlResourceEntryNode : ResourceEntryNode, IHasEmbeddedXDocument
 	{
+		XDocument m_XamlDocEmbeddedFromLoad = null;
 		public BamlResourceEntryNode(string key, Stream data) : base(key, data)
 		{
 		}
 		
-		public override bool View(DecompilerTextView textView)
+		public override bool View(IDecompilerTextView textView)
 		{
 			AvalonEditTextOutput output = new AvalonEditTextOutput();
 			IHighlightingDefinition highlighting = null;
@@ -49,8 +50,8 @@ namespace ILSpy.BamlDecompiler
 		{
 			var asm = this.Ancestors().OfType<AssemblyTreeNode>().FirstOrDefault().LoadedAssembly;
 			Data.Position = 0;
-			XDocument xamlDocument = LoadIntoDocument(asm.GetAssemblyResolver(), asm.AssemblyDefinition, Data);
-			output.Write(xamlDocument.ToString());
+			m_XamlDocEmbeddedFromLoad = LoadIntoDocument(asm.GetAssemblyResolver(), asm.AssemblyDefinition, Data);
+			output.Write(m_XamlDocEmbeddedFromLoad.ToString());
 			return true;
 		}
 
@@ -143,5 +144,20 @@ namespace ILSpy.BamlDecompiler
 				attr.Remove();
 			element.Add(addableAttrs);
 		}
+
+		#region IHasEmbeddedXDocument Members
+
+		public XDocument GetEmbeddedXDocument(LoadedAssembly loadedAssembly)
+		{
+			if (m_XamlDocEmbeddedFromLoad == null)
+			{
+				var asm = loadedAssembly;//this.Ancestors().OfType<AssemblyTreeNode>().FirstOrDefault().LoadedAssembly;
+				Data.Position = 0;
+				m_XamlDocEmbeddedFromLoad = LoadIntoDocument(asm.GetAssemblyResolver(), asm.AssemblyDefinition, Data);
+			}
+			return m_XamlDocEmbeddedFromLoad;
+		}
+
+		#endregion
 	}
 }

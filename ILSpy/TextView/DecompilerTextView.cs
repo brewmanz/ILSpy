@@ -61,7 +61,7 @@ namespace ICSharpCode.ILSpy.TextView
 	/// Contains all the threading logic that makes the decompiler work in the background.
 	/// </summary>
 	[Export, PartCreationPolicy(CreationPolicy.Shared)]
-	public sealed partial class DecompilerTextView : UserControl, IDisposable
+	public sealed partial class DecompilerTextView : UserControl, IDisposable, IDecompilerTextView
 	{
 		readonly ReferenceElementGenerator referenceElementGenerator;
 		readonly UIElementGenerator uiElementGenerator;
@@ -80,7 +80,157 @@ namespace ICSharpCode.ILSpy.TextView
 		
 		[ImportMany(typeof(ITextEditorListener))]
 		IEnumerable<ITextEditorListener> textEditorListeners = null;
-		
+
+		#region Proxy Dummy IDecompilerTextView
+		public class DecompilerTextViewProxy : IDecompilerTextView
+		{
+			string m_ShowNodeResult;
+			CancellationTokenSource currentCancellationTokenSource = null;
+
+			public string ViewShowNodeResult()
+			{
+				return m_ShowNodeResult;
+			}
+			#region IDecompilerTextView Members
+
+			public void ShowNode(AvalonEditTextOutput textOutput, ILSpyTreeNode node, IHighlightingDefinition highlighting)
+			{
+				m_ShowNodeResult = textOutput.GetDocument().Text;
+			}
+
+			public void RunWithCancellation<T>(Func<CancellationToken, Task<T>> taskCreation, Action<Task<T>> taskCompleted)
+			{
+				var myCancellationTokenSource = new CancellationTokenSource();
+				var task = taskCreation(myCancellationTokenSource.Token);
+				taskCompleted(task);
+#if false
+				if (waitAdorner.Visibility != Visibility.Visible)
+				{
+					waitAdorner.Visibility = Visibility.Visible;
+					waitAdorner.BeginAnimation(OpacityProperty, new DoubleAnimation(0, 1, new Duration(TimeSpan.FromSeconds(0.5)), FillBehavior.Stop));
+				}
+				CancellationTokenSource previousCancellationTokenSource = currentCancellationTokenSource;
+				var myCancellationTokenSource = new CancellationTokenSource();
+				currentCancellationTokenSource = myCancellationTokenSource;
+				// cancel the previous only after current was set to the new one (avoid that the old one still finishes successfully)
+				if (previousCancellationTokenSource != null)
+					previousCancellationTokenSource.Cancel();
+
+				var task = taskCreation(myCancellationTokenSource.Token);
+				Action continuation = delegate
+				{
+					try
+					{
+						if (currentCancellationTokenSource == myCancellationTokenSource)
+						{
+							currentCancellationTokenSource = null;
+							//waitAdorner.Visibility = Visibility.Collapsed;
+							if (task.IsCanceled)
+							{
+								AvalonEditTextOutput output = new AvalonEditTextOutput();
+								output.WriteLine("The operation was canceled.");
+								ShowOutput(output);
+							}
+							else
+							{
+								taskCompleted(task);
+							}
+						}
+						else
+						{
+							try
+							{
+								task.Wait();
+							}
+							catch (AggregateException)
+							{
+								// observe the exception (otherwise the task's finalizer will shut down the AppDomain)
+							}
+						}
+					}
+					finally
+					{
+						myCancellationTokenSource.Dispose();
+					}
+				};
+				task.ContinueWith(delegate { Dispatcher.BeginInvoke(DispatcherPriority.Normal, continuation); });
+#endif
+			}
+
+			void ShowOutput(AvalonEditTextOutput textOutput, IHighlightingDefinition highlighting = null, DecompilerTextViewState state = null)
+			{
+#if false
+				Debug.WriteLine("Showing {0} characters of output", textOutput.TextLength);
+				Stopwatch w = Stopwatch.StartNew();
+				ClearLocalReferenceMarks();
+				textEditor.ScrollToHome();
+				if (foldingManager != null)
+				{
+					FoldingManager.Uninstall(foldingManager);
+					foldingManager = null;
+				}
+				textEditor.Document = null; // clear old document while we're changing the highlighting
+				uiElementGenerator.UIElements = textOutput.UIElements;
+				referenceElementGenerator.References = textOutput.References;
+				references = textOutput.References;
+				definitionLookup = textOutput.DefinitionLookup;
+				textEditor.SyntaxHighlighting = highlighting;
+				// Change the set of active element generators:
+				foreach (var elementGenerator in activeCustomElementGenerators)
+				{
+					textEditor.TextArea.TextView.ElementGenerators.Remove(elementGenerator);
+				}
+				activeCustomElementGenerators.Clear();
+
+				foreach (var elementGenerator in textOutput.elementGenerators)
+				{
+					textEditor.TextArea.TextView.ElementGenerators.Add(elementGenerator);
+					activeCustomElementGenerators.Add(elementGenerator);
+				}
+
+				Debug.WriteLine("  Set-up: {0}", w.Elapsed); w.Restart();
+				textEditor.Document = textOutput.GetDocument();
+				Debug.WriteLine("  Assigning document: {0}", w.Elapsed); w.Restart();
+				if (textOutput.Foldings.Count > 0)
+				{
+					if (state != null)
+					{
+						state.RestoreFoldings(textOutput.Foldings);
+						textEditor.ScrollToVerticalOffset(state.VerticalOffset);
+						textEditor.ScrollToHorizontalOffset(state.HorizontalOffset);
+					}
+					foldingManager = FoldingManager.Install(textEditor.TextArea);
+					foldingManager.UpdateFoldings(textOutput.Foldings.OrderBy(f => f.StartOffset), -1);
+					Debug.WriteLine("  Updating folding: {0}", w.Elapsed); w.Restart();
+				}
+
+				// update debugger info
+				DebugInformation.CodeMappings = textOutput.DebuggerMemberMappings.ToDictionary(m => m.MetadataToken);
+
+				// update class bookmarks
+				var document = textEditor.Document;
+				manager.Bookmarks.Clear();
+				foreach (var pair in textOutput.DefinitionLookup.definitions)
+				{
+					MemberReference member = pair.Key as MemberReference;
+					int offset = pair.Value;
+					if (member != null)
+					{
+						int line = document.GetLocation(offset).Line;
+						manager.Bookmarks.Add(new MemberBookmark(member, line));
+					}
+				}
+#endif
+			}
+
+			#endregion
+		}
+		public static DecompilerTextViewProxy CreateProxy()
+		{
+			DecompilerTextViewProxy res = new DecompilerTextViewProxy();
+			return res;
+		}
+		#endregion Proxy Dummy IDecompilerTextView 
 		#region Constructor
 		public DecompilerTextView()
 		{

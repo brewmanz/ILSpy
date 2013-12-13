@@ -17,6 +17,7 @@
 // DEALINGS IN THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using ICSharpCode.NRefactory.CSharp;
 using Mono.Cecil;
@@ -28,16 +29,31 @@ namespace ICSharpCode.ILSpy.XmlDoc
 	/// </summary>
 	static class AddXmlDocTransform
 	{
-		public static void Run(AstNode node)
+		static HashSet<string> ms_hshFailedGetDocKey = new HashSet<string>();
+		public static void Run(AstNode node, bool isChild)
 		{
+			if (!isChild)
+			{
+				ms_hshFailedGetDocKey.Clear();
+			}
 			if (node is EntityDeclaration) {
 				MemberReference mr = node.Annotation<MemberReference>();
 				if (mr != null && mr.Module != null) {
 					var xmldoc = XmlDocLoader.LoadDocumentation(mr.Module);
 					if (xmldoc != null) {
-						string doc = xmldoc.GetDocumentation(XmlDocKeyProvider.GetKey(mr));
-						if (doc != null) {
-							InsertXmlDocumentation(node, new StringReader(doc));
+						string key = XmlDocKeyProvider.GetKey(mr);
+						// skip search if previous attempt failed
+						if (!ms_hshFailedGetDocKey.Contains(key))
+						{
+							string doc = xmldoc.GetDocumentation(key);
+							if (doc != null)
+							{
+								InsertXmlDocumentation(node, new StringReader(doc));
+							}
+							else
+							{
+								ms_hshFailedGetDocKey.Add(key);
+							}
 						}
 					}
 				}
@@ -45,7 +61,11 @@ namespace ICSharpCode.ILSpy.XmlDoc
 					return; // don't recurse into attributed nodes, except for type definitions
 			}
 			foreach (AstNode child in node.Children)
-				Run(child);
+				Run(child, true);
+			if (!isChild)
+			{
+				ms_hshFailedGetDocKey.Clear();
+			}
 		}
 		
 		static void InsertXmlDocumentation(AstNode node, StringReader r)

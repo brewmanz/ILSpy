@@ -25,8 +25,20 @@ using ICSharpCode.TreeView;
 
 namespace ICSharpCode.ILSpy.TreeNodes
 {
+	/// <summary>
+	/// enough to abstract-ise DecompilerTextView
+	/// </summary>
 	public interface IDecompilerTextView
 	{
+		void ShowNode(ICSharpCode.ILSpy.TextView.AvalonEditTextOutput textOutput, ILSpyTreeNode node, ICSharpCode.AvalonEdit.Highlighting.IHighlightingDefinition highlighting);
+		void RunWithCancellation<T>(Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<T>> taskCreation, Action<System.Threading.Tasks.Task<T>> taskCompleted);
+	}
+	/// <summary>
+	/// created to extract XDoc from BamlResourceEntryNode
+	/// </summary>
+	public interface IHasEmbeddedXDocument
+	{
+		System.Xml.Linq.XDocument GetEmbeddedXDocument(LoadedAssembly loadedAssembly);
 	}
 	/// <summary>
 	/// Base class of all ILSpy tree nodes.
@@ -74,10 +86,14 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		/// This method is called on the main thread when only a single item is selected.
 		/// If it returns false, normal decompilation is used to view the item.
 		/// </summary>
-		public virtual bool View(TextView.DecompilerTextView textView)
+		public virtual bool View(IDecompilerTextView textView)
 		{
 			return false;
 		}
+		//public virtual bool View(TextView.DecompilerTextView textView)
+		//{
+		//	return false;
+		//}
 
 		/// <summary>
 		/// Used to implement special save logic for some items.
