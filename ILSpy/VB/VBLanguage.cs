@@ -67,10 +67,11 @@ namespace ICSharpCode.ILSpy.VB
 		{
 			output.WriteLine("' " + comment);
 		}
-		
+
 		public override void DecompileAssembly(LoadedAssembly assembly, ITextOutput output, DecompilationOptions options)
 		{
-			AddXmlDocTransform.ClearHashes();
+			ICacheXmlDocFindFailure cacheOfFail = new CacheXmlDocFindFailure_default();
+			cacheOfFail.ClearCache();
 			if (options.FullDecompilation && options.SaveAsProjectDirectory != null)
 			{
 				HashSet<string> directories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -376,7 +377,7 @@ namespace ICSharpCode.ILSpy.VB
 			return fileName;
 		}
 		#endregion
-		
+
 		public override void DecompileMethod(MethodDefinition method, ITextOutput output, DecompilationOptions options)
 		{
 			WriteCommentLine(output, TypeToString(method.DeclaringType, includeNamespace: true));
@@ -384,7 +385,7 @@ namespace ICSharpCode.ILSpy.VB
 			codeDomBuilder.AddMethod(method);
 			RunTransformsAndGenerateCode(codeDomBuilder, output, options, method.Module);
 		}
-		
+
 		public override void DecompileProperty(PropertyDefinition property, ITextOutput output, DecompilationOptions options)
 		{
 			WriteCommentLine(output, TypeToString(property.DeclaringType, includeNamespace: true));
@@ -392,7 +393,7 @@ namespace ICSharpCode.ILSpy.VB
 			codeDomBuilder.AddProperty(property);
 			RunTransformsAndGenerateCode(codeDomBuilder, output, options, property.Module);
 		}
-		
+
 		public override void DecompileField(FieldDefinition field, ITextOutput output, DecompilationOptions options)
 		{
 			WriteCommentLine(output, TypeToString(field.DeclaringType, includeNamespace: true));
@@ -400,7 +401,7 @@ namespace ICSharpCode.ILSpy.VB
 			codeDomBuilder.AddField(field);
 			RunTransformsAndGenerateCode(codeDomBuilder, output, options, field.Module);
 		}
-		
+
 		public override void DecompileEvent(EventDefinition ev, ITextOutput output, DecompilationOptions options)
 		{
 			WriteCommentLine(output, TypeToString(ev.DeclaringType, includeNamespace: true));
@@ -408,7 +409,7 @@ namespace ICSharpCode.ILSpy.VB
 			codeDomBuilder.AddEvent(ev);
 			RunTransformsAndGenerateCode(codeDomBuilder, output, options, ev.Module);
 		}
-		
+
 		public override void DecompileType(TypeDefinition type, ITextOutput output, DecompilationOptions options)
 		{
 			AstBuilder codeDomBuilder = CreateAstBuilder(options, currentType: type);
@@ -420,12 +421,12 @@ namespace ICSharpCode.ILSpy.VB
 		{
 			return showAllMembers || !AstBuilder.MemberIsHidden(member, new DecompilationOptions().DecompilerSettings);
 		}
-		
+
 		void RunTransformsAndGenerateCode(AstBuilder astBuilder, ITextOutput output, DecompilationOptions options, ModuleDefinition module)
 		{
 			astBuilder.RunTransformations(transformAbortCondition);
 			if (options.DecompilerSettings.ShowXmlDocumentation)
-				AddXmlDocTransform.Run(astBuilder.CompilationUnit);
+				AddXmlDocTransform.Run(astBuilder.CompilationUnit, options.cacheOfFail);
 			var csharpUnit = astBuilder.CompilationUnit;
 			csharpUnit.AcceptVisitor(new NRefactory.CSharp.InsertParenthesesVisitor() { InsertParenthesesForReadability = true });
 			var unit = csharpUnit.AcceptVisitor(new CSharpToVBConverterVisitor(new ILSpyEnvironmentProvider()), null);

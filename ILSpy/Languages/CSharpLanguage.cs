@@ -207,7 +207,7 @@ namespace ICSharpCode.ILSpy
 			codeDomBuilder.AddType(type);
 			RunTransformsAndGenerateCode(codeDomBuilder, output, options);
 		}
-		
+
 		void RunTransformsAndGenerateCode(AstBuilder astBuilder, ITextOutput output, DecompilationOptions options, IAstTransform additionalTransform = null)
 		{
 			astBuilder.RunTransformations(transformAbortCondition);
@@ -215,7 +215,7 @@ namespace ICSharpCode.ILSpy
 				additionalTransform.Run(astBuilder.CompilationUnit);
 			}
 			if (options.DecompilerSettings.ShowXmlDocumentation) {
-				AddXmlDocTransform.Run(astBuilder.CompilationUnit);
+				AddXmlDocTransform.Run(astBuilder.CompilationUnit, options.cacheOfFail);
 			}
 			astBuilder.GenerateCode(output);
 		}
@@ -260,7 +260,8 @@ namespace ICSharpCode.ILSpy
 		
 		public override void DecompileAssembly(LoadedAssembly assembly, ITextOutput output, DecompilationOptions options)
 		{
-			AddXmlDocTransform.ClearHashes();
+			ICacheXmlDocFindFailure cacheOfFail = new CacheXmlDocFindFailure_default();
+			cacheOfFail.ClearCache();
 			if (options.FullDecompilation && options.SaveAsProjectDirectory != null)
 			{
 				HashSet<string> directories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

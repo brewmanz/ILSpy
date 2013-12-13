@@ -77,7 +77,7 @@ namespace ICSharpCode.ILSpy
 				rd.DisassembleMethod(m);
 			}
 		}
-		
+
 		public override void DecompileEvent(EventDefinition ev, ITextOutput output, DecompilationOptions options)
 		{
 			ReflectionDisassembler rd = new ReflectionDisassembler(output, detectControlStructure, options.CancellationToken);
@@ -95,13 +95,13 @@ namespace ICSharpCode.ILSpy
 				rd.DisassembleMethod(m);
 			}
 		}
-		
+
 		public override void DecompileType(TypeDefinition type, ITextOutput output, DecompilationOptions options)
 		{
 			var dis = new ReflectionDisassembler(output, detectControlStructure, options.CancellationToken);
 			dis.DisassembleType(type);
 		}
-		
+
 		public override void DecompileNamespace(string nameSpace, IEnumerable<TypeDefinition> types, ITextOutput output, DecompilationOptions options)
 		{
 			new ReflectionDisassembler(output, detectControlStructure, options.CancellationToken).DisassembleNamespace(nameSpace, types);

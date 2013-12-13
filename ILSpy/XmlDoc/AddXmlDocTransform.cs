@@ -29,45 +29,37 @@ namespace ICSharpCode.ILSpy.XmlDoc
 	/// </summary>
 	static class AddXmlDocTransform
 	{
-		static HashSet<string> ms_hshFailedGetDocKey = new HashSet<string>();
-		static HashSet<string> ms_hshFailedLoadDocKey = new HashSet<string>();
-		public static void ClearHashes()
-		{
-			ms_hshFailedGetDocKey.Clear();
-			ms_hshFailedLoadDocKey.Clear();
-		}
-		public static void Run(AstNode node)
+		public static void Run(AstNode node, ICacheXmlDocFindFailure cacheOfFail)
 		{
 			if (node is EntityDeclaration)
 			{
 				MemberReference mr = node.Annotation<MemberReference>();
 				if (mr != null && mr.Module != null)
 				{
-					string keyFQN = mr.Module.FullyQualifiedName;
 					// skip search if previous attempt failed
-					if (!ms_hshFailedLoadDocKey.Contains(keyFQN))
+					if (!cacheOfFail.HasLoadDocModFailedPreviously(mr.Module))
 					{
 						var xmldoc = XmlDocLoader.LoadDocumentation(mr.Module);
-						if (xmldoc != null)
+						if (xmldoc == null)
 						{
-							string key = XmlDocKeyProvider.GetKey(mr);
-							// skip search if previous attempt failed
-							if (!ms_hshFailedGetDocKey.Contains(key))
-							{
-								string doc = xmldoc.GetDocumentation(key);
-								if (doc != null)
-								{
-									InsertXmlDocumentation(node, new StringReader(doc));
-								}
-								else
-								{
-									ms_hshFailedGetDocKey.Add(key);
-								}
-							}
+							cacheOfFail.FlagLoadDocModAsFail(mr.Module);
 						}
 						else
 						{
-							ms_hshFailedLoadDocKey.Add(keyFQN);
+							string key = XmlDocKeyProvider.GetKey(mr);
+							// skip search if previous attempt failed
+							if (!cacheOfFail.HasGetDocKeyFailedPreviously(key))
+							{
+								string doc = xmldoc.GetDocumentation(key);
+								if (doc == null)
+								{
+									cacheOfFail.FlagGetDocKeyAsFail(key);
+								}
+								else
+								{
+									InsertXmlDocumentation(node, new StringReader(doc));
+								}
+							}
 						}
 					}
 				}
@@ -75,7 +67,7 @@ namespace ICSharpCode.ILSpy.XmlDoc
 					return; // don't recurse into attributed nodes, except for type definitions
 			}
 			foreach (AstNode child in node.Children)
-				Run(child);
+				Run(child, cacheOfFail);
 		}
 		
 		static void InsertXmlDocumentation(AstNode node, StringReader r)

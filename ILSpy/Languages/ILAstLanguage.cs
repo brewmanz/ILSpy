@@ -42,7 +42,7 @@ namespace ICSharpCode.ILSpy
 				return name;
 			}
 		}
-		
+
 		public override void DecompileMethod(MethodDefinition method, ITextOutput output, DecompilationOptions options)
 		{
 			if (!method.HasBody) {
