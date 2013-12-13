@@ -70,7 +70,9 @@ namespace ICSharpCode.ILSpy.VB
 		
 		public override void DecompileAssembly(LoadedAssembly assembly, ITextOutput output, DecompilationOptions options)
 		{
-			if (options.FullDecompilation && options.SaveAsProjectDirectory != null) {
+			AddXmlDocTransform.ClearHashes();
+			if (options.FullDecompilation && options.SaveAsProjectDirectory != null)
+			{
 				HashSet<string> directories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 				var files = WriteCodeFilesInProject(assembly.AssemblyDefinition, options, directories).ToList();
 				files.AddRange(WriteResourceFilesInProject(assembly, options, directories));
@@ -423,7 +425,7 @@ namespace ICSharpCode.ILSpy.VB
 		{
 			astBuilder.RunTransformations(transformAbortCondition);
 			if (options.DecompilerSettings.ShowXmlDocumentation)
-				AddXmlDocTransform.Run(astBuilder.CompilationUnit, false);
+				AddXmlDocTransform.Run(astBuilder.CompilationUnit);
 			var csharpUnit = astBuilder.CompilationUnit;
 			csharpUnit.AcceptVisitor(new NRefactory.CSharp.InsertParenthesesVisitor() { InsertParenthesesForReadability = true });
 			var unit = csharpUnit.AcceptVisitor(new CSharpToVBConverterVisitor(new ILSpyEnvironmentProvider()), null);
