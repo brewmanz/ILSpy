@@ -16,5 +16,5 @@ DEBUG;TRACE
 22-1719264170
 ToolTips\DebuggerTooltipControl.xaml;ToolTips\PinControlsDictionary.xaml;ToolTips\VisualizerPicker.xaml;UI\AttachToProcessWindow.xaml;UI\BreakpointPanel.xaml;UI\CallStackPanel.xaml;UI\DebuggerSettingsPanel.xaml;UI\ExecuteProcessWindow.xaml;
 
-True
+False
 

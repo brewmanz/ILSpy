@@ -9,10 +9,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-using ICSharpCode.ILSpy;
 using ICSharpCode.ILSpy.Controls;
-using ICSharpCode.ILSpy.TextView;
-using ICSharpCode.TreeView;
 using System;
 using System.Diagnostics;
 using System.Windows;
