@@ -32,6 +32,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 	{
 		void ShowNode(ICSharpCode.ILSpy.TextView.AvalonEditTextOutput textOutput, ILSpyTreeNode node, ICSharpCode.AvalonEdit.Highlighting.IHighlightingDefinition highlighting);
 		void RunWithCancellation<T>(Func<System.Threading.CancellationToken, System.Threading.Tasks.Task<T>> taskCreation, Action<System.Threading.Tasks.Task<T>> taskCompleted);
+		ePercentRemapOption PercentRemapOption { get; }
 	}
 	/// <summary>
 	/// created to extract XDoc from BamlResourceEntryNode

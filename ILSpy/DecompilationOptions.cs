@@ -34,6 +34,12 @@ namespace ICSharpCode.ILSpy
 		bool HasGetDocKeyFailedPreviously(string key);
 		void FlagGetDocKeyAsFail(string key);
 	}
+	public enum ePercentRemapOption
+	{
+		pcroUnspecified = 0,
+		pcroNoRemap,
+		pcroPercent20ToSpace,
+	}
 	/// <summary>
 	/// Options passed to the decompiler.
 	/// </summary>
@@ -72,11 +78,20 @@ namespace ICSharpCode.ILSpy
 		/// </remarks>
 		public TextView.DecompilerTextViewState TextViewState { get; set; }
 
+		/// <summary>
+		/// What to do about %20 in resource paths etc
+		/// </summary>
+		public ePercentRemapOption PercentRemapOption { 
+			get; 
+			set; 
+		}
+
 		public ICacheXmlDocFindFailure cacheOfFail { get; set; }
 		public DecompilationOptions()
 		{
 			this.DecompilerSettings = DecompilerSettingsPanel.CurrentDecompilerSettings;
 			this.cacheOfFail = new CacheXmlDocFindFailure_default();
+			this.PercentRemapOption = ePercentRemapOption.pcroPercent20ToSpace;	// TODO maybe allow change to this default
 		}
 	}
 	class CacheXmlDocFindFailure_default : ICacheXmlDocFindFailure

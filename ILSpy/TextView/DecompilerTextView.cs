@@ -87,6 +87,8 @@ namespace ICSharpCode.ILSpy.TextView
 			string m_ShowNodeResult;
 			CancellationTokenSource currentCancellationTokenSource = null;
 
+			public ePercentRemapOption PercentRemapOption { get; set; }
+
 			public string ViewShowNodeResult()
 			{
 				return m_ShowNodeResult;
@@ -228,6 +230,7 @@ namespace ICSharpCode.ILSpy.TextView
 		public static DecompilerTextViewProxy CreateProxy()
 		{
 			DecompilerTextViewProxy res = new DecompilerTextViewProxy();
+			res.PercentRemapOption = ePercentRemapOption.pcroPercent20ToSpace;
 			return res;
 		}
 		#endregion Proxy Dummy IDecompilerTextView 
@@ -276,6 +279,7 @@ namespace ICSharpCode.ILSpy.TextView
 			this.Loaded += new RoutedEventHandler(DecompilerTextView_Loaded);
 		}
 
+		public ePercentRemapOption PercentRemapOption { get; set; }
 		void DecompilerTextView_Loaded(object sender, RoutedEventArgs e)
 		{
 			ShowLineMargin();
@@ -813,7 +817,7 @@ namespace ICSharpCode.ILSpy.TextView
 			SaveFileDialog dlg = new SaveFileDialog();
 			dlg.DefaultExt = language.FileExtension;
 			dlg.Filter = language.Name + "|*" + language.FileExtension + "|All Files|*.*";
-			dlg.FileName = CleanUpName(treeNodes.First().ToString(), true) + language.FileExtension;
+			dlg.FileName = CleanUpName(treeNodes.First().ToString(), options.PercentRemapOption) + language.FileExtension;
 			if (dlg.ShowDialog() == true) {
 				SaveToDisk(new DecompilationContext(language, treeNodes.ToArray(), options), dlg.FileName);
 			}
@@ -896,8 +900,17 @@ namespace ICSharpCode.ILSpy.TextView
 		/// <summary>
 		/// Cleans up a node name for use as a file name.
 		/// </summary>
-		internal static string CleanUpName(string text, bool changePercent20)
+		internal static string CleanUpName(string text, ePercentRemapOption pcro)
 		{
+			switch (pcro)
+			{
+				case ePercentRemapOption.pcroNoRemap:
+				case ePercentRemapOption.pcroPercent20ToSpace:
+					// all these options fine
+					break;
+				default:
+					throw new ArgumentOutOfRangeException("pcro", string.Format("Unexpected value of <{0}>", pcro));
+			}
 			int pos = text.IndexOf(':');
 			if (pos > 0)
 				text = text.Substring(0, pos);
@@ -907,7 +920,7 @@ namespace ICSharpCode.ILSpy.TextView
 			text = text.Trim();
 			foreach (char c in Path.GetInvalidFileNameChars())
 				text = text.Replace(c, '-');
-			if(changePercent20)
+			if(pcro == ePercentRemapOption.pcroPercent20ToSpace)
 				text = text.Replace(@"%20", @" ");	// change "My%20Path" to "My Path"
 			return text;
 		}

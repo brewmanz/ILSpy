@@ -255,11 +255,11 @@ namespace ICSharpCode.ILSpy.VB
 		{
 			var files = assembly.MainModule.Types.Where(t => IncludeTypeWhenDecompilingProject(t, options)).GroupBy(
 				delegate(TypeDefinition type) {
-					string file = TextView.DecompilerTextView.CleanUpName(type.Name, false) + this.FileExtension;
+					string file = TextView.DecompilerTextView.CleanUpName(type.Name, options.PercentRemapOption) + this.FileExtension;
 					if (string.IsNullOrEmpty(type.Namespace)) {
 						return file;
 					} else {
-						string dir = TextView.DecompilerTextView.CleanUpName(type.Namespace, false);
+						string dir = TextView.DecompilerTextView.CleanUpName(type.Namespace, options.PercentRemapOption);
 						if (directories.Add(dir))
 							Directory.CreateDirectory(Path.Combine(options.SaveAsProjectDirectory, dir));
 						return Path.Combine(dir, file);
@@ -301,7 +301,7 @@ namespace ICSharpCode.ILSpy.VB
 						}
 						if (rs != null && rs.All(e => e.Value is Stream)) {
 							foreach (var pair in rs) {
-								fileName = Path.Combine(((string)pair.Key).Split('/').Select(p => TextView.DecompilerTextView.CleanUpName(p, true)).ToArray());
+								fileName = Path.Combine(((string)pair.Key).Split('/').Select(p => TextView.DecompilerTextView.CleanUpName(p, options.PercentRemapOption)).ToArray());
 								string dirName = Path.GetDirectoryName(fileName);
 								if (!string.IsNullOrEmpty(dirName) && directories.Add(dirName)) {
 									Directory.CreateDirectory(Path.Combine(options.SaveAsProjectDirectory, dirName));
@@ -349,7 +349,7 @@ namespace ICSharpCode.ILSpy.VB
 							continue;
 						}
 					}
-					fileName = GetFileNameForResource(r.Name, directories);
+					fileName = GetFileNameForResource(r.Name, directories, options.PercentRemapOption);
 					using (FileStream fs = new FileStream(Path.Combine(options.SaveAsProjectDirectory, fileName), FileMode.Create, FileAccess.Write)) {
 						s.CopyTo(fs);
 					}
@@ -362,15 +362,15 @@ namespace ICSharpCode.ILSpy.VB
 			//}
 		}
 
-		string GetFileNameForResource(string fullName, HashSet<string> directories)
+		string GetFileNameForResource(string fullName, HashSet<string> directories, ePercentRemapOption pcro)
 		{
 			string[] splitName = fullName.Split('.');
-			string fileName = TextView.DecompilerTextView.CleanUpName(fullName, true);
+			string fileName = TextView.DecompilerTextView.CleanUpName(fullName, pcro);
 			for (int i = splitName.Length - 1; i > 0; i--) {
 				string ns = string.Join(".", splitName, 0, i);
 				if (directories.Contains(ns)) {
 					string name = string.Join(".", splitName, i, splitName.Length - i);
-					fileName = Path.Combine(ns, TextView.DecompilerTextView.CleanUpName(name, true));
+					fileName = Path.Combine(ns, TextView.DecompilerTextView.CleanUpName(name, pcro));
 					break;
 				}
 			}

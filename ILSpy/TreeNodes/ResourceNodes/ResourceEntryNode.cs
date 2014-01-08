@@ -81,7 +81,7 @@ namespace ICSharpCode.ILSpy.TreeNodes
 		public override bool Save(DecompilerTextView textView)
 		{
 			SaveFileDialog dlg = new SaveFileDialog();
-			dlg.FileName = Path.GetFileName(DecompilerTextView.CleanUpName(key, true));
+			dlg.FileName = Path.GetFileName(DecompilerTextView.CleanUpName(key, textView.PercentRemapOption));
 			if (dlg.ShowDialog() == true) {
 				data.Position = 0;
 				using (var fs = dlg.OpenFile()) {
