@@ -96,7 +96,10 @@ namespace ICSharpCode.ILSpy.XmlDoc
 			}
 			return fileName;
 		}
-		
+		static string HMSF()
+		{
+			return DateTime.Now.ToString("HH:mm:ss.fff");
+		}
 		static string LookupLocalizedXmlDoc(string fileName)
 		{
 			if (string.IsNullOrEmpty(fileName))
@@ -106,17 +109,17 @@ namespace ICSharpCode.ILSpy.XmlDoc
 			string currentCulture = System.Threading.Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName;
 			string localizedXmlDocFile = GetLocalizedName(xmlFileName, currentCulture);
 			
-			Debug.WriteLine("Try find XMLDoc @" + localizedXmlDocFile);
+			Debug.WriteLine(HMSF() + " Try find XMLDoc @" + localizedXmlDocFile);
 			if (File.Exists(localizedXmlDocFile)) {
 				return localizedXmlDocFile;
 			}
-			Debug.WriteLine("Try find XMLDoc @" + xmlFileName);
+			Debug.WriteLine(HMSF() + " Try find XMLDoc @" + xmlFileName);
 			if (File.Exists(xmlFileName)) {
 				return xmlFileName;
 			}
 			if (currentCulture != "en") {
 				string englishXmlDocFile = GetLocalizedName(xmlFileName, "en");
-				Debug.WriteLine("Try find XMLDoc @" + englishXmlDocFile);
+				Debug.WriteLine(HMSF() + " Try find XMLDoc @" + englishXmlDocFile);
 				if (File.Exists(englishXmlDocFile)) {
 					return englishXmlDocFile;
 				}

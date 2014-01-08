@@ -225,9 +225,9 @@ namespace ICSharpCode.AvalonEdit.Highlighting
 				// So when the highlighting state is changed, we issue a redraw for the line immediately below.
 				// If the highlighting state change applies to the lines below, too, the construction of each line
 				// will invalidate the next line, and the construction pass will regenerate all lines.
-				
-				Debug.WriteLine("OnHighlightStateChanged forces redraw of line " + (lineNumber + 1));
-				
+
+				Debug.WriteLine(Utils.Ute.HMSF() + " OnHighlightStateChanged forces redraw of line " + (lineNumber + 1));
+
 				// If the VisualLine construction is in progress, we have to avoid sending redraw commands for
 				// anything above the line currently being constructed.
 				// It takes some explanation to see why this cannot happen.

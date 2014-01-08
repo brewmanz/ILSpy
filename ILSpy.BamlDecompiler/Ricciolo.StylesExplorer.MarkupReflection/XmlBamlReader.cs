@@ -16,6 +16,24 @@ using System.Windows.Media;
 
 namespace Ricciolo.StylesExplorer.MarkupReflection
 {
+	public class RecTypTracer{
+		static int ms_Inst = 0;
+		public RecTypTracer()
+		{
+			Inst = ++ms_Inst;
+			Sequence = 0;
+			Indent = 0;
+		}
+		public int Inst;
+		public int Sequence;
+		public int Indent;
+		public override string ToString()
+		{
+			StringBuilder sb = new StringBuilder(100);
+			sb.AppendFormat("[{0}]{1}#{2}.", Inst, Indent, Sequence);
+			return sb.ToString();
+		}
+	}
 	public class XmlBamlReader : XmlReader, IXmlNamespaceResolver
 	{
 		BamlBinaryReader reader;
@@ -286,9 +304,10 @@ namespace Ricciolo.StylesExplorer.MarkupReflection
 
 			try
 			{
+				RecTypTracer rtt = new RecTypTracer();
 				do
 				{
-					ReadRecordType();
+					ReadRecordType(ref rtt);
 					if (currentType == BamlRecordType.DocumentEnd)
 						break;
 
@@ -317,19 +336,26 @@ namespace Ricciolo.StylesExplorer.MarkupReflection
 			}
 		}
 
-		void ReadRecordType()
+		void ReadRecordType(ref RecTypTracer rtt)
 		{
+			++rtt.Sequence;
 			byte type = reader.ReadByte();
 			if (type < 0)
 				currentType = BamlRecordType.DocumentEnd;
 			else
 				currentType = (BamlRecordType)type;
-			
+
 			if (currentType.ToString().EndsWith("End"))
+			{
+				--rtt.Indent;
 				Debug.Unindent();
-			Debug.WriteLine(string.Format("{0} (0x{0:x})", currentType));
+			}
+			Debug.WriteLine(string.Format("{0} (0x{0:x}) {1}", currentType, rtt));
 			if (currentType.ToString().EndsWith("Start"))
+			{
+				++rtt.Indent;
 				Debug.Indent();
+			}
 		}
 
 		bool SetNextNode()

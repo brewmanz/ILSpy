@@ -249,7 +249,9 @@ namespace ICSharpCode.ILSpy.TextView
 			
 			this.Loaded+= new RoutedEventHandler(DecompilerTextView_Loaded);
 			InitializeComponent();
-			
+
+			this.PercentRemapOption = ePercentRemapOption.pcroPercent20ToSpace;
+
 			this.referenceElementGenerator = new ReferenceElementGenerator(this.JumpToReference, this.IsLink);
 			textEditor.TextArea.TextView.ElementGenerators.Add(referenceElementGenerator);
 			this.uiElementGenerator = new UIElementGenerator();
@@ -259,7 +261,7 @@ namespace ICSharpCode.ILSpy.TextView
 			textEditor.TextArea.TextView.MouseHoverStopped += TextViewMouseHoverStopped;
 			textEditor.SetBinding(TextEditor.FontFamilyProperty, new Binding { Source = DisplaySettingsPanel.CurrentDisplaySettings, Path = new PropertyPath("SelectedFont") });
 			textEditor.SetBinding(TextEditor.FontSizeProperty, new Binding { Source = DisplaySettingsPanel.CurrentDisplaySettings, Path = new PropertyPath("SelectedFontSize") });
-			
+
 			// add marker service & margin
 			iconMargin = new IconBarMargin((manager = new IconBarManager()));
 			textMarkerService = new TextMarkerService();
@@ -268,14 +270,14 @@ namespace ICSharpCode.ILSpy.TextView
 			textEditor.TextArea.TextView.LineTransformers.Add(textMarkerService);
 			textEditor.ShowLineNumbers = true;
 			DisplaySettingsPanel.CurrentDisplaySettings.PropertyChanged += CurrentDisplaySettings_PropertyChanged;
-			
+
 			textEditor.TextArea.LeftMargins.Insert(0, iconMargin);
 			textEditor.TextArea.TextView.VisualLinesChanged += delegate { iconMargin.InvalidateVisual(); };
-			
+
 			// Bookmarks context menu
 			IconMarginActionsProvider.Add(iconMargin);
 			textEditor.TextArea.DefaultInputHandler.NestedInputHandlers.Add(new SearchInputHandler(textEditor.TextArea));
-			
+
 			this.Loaded += new RoutedEventHandler(DecompilerTextView_Loaded);
 		}
 

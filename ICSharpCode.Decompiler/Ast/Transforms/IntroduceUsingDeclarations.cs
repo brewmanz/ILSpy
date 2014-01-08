@@ -29,6 +29,10 @@ namespace ICSharpCode.Decompiler.Ast.Transforms
 	/// </summary>
 	public class IntroduceUsingDeclarations : IAstTransform
 	{
+		static string HMSF()
+		{
+			return DateTime.Now.ToString("HH:mm:ss.fff");
+		}
 		DecompilerContext context;
 		
 		public IntroduceUsingDeclarations(DecompilerContext context)
@@ -63,6 +67,7 @@ namespace ICSharpCode.Decompiler.Ast.Transforms
 			
 			FindAmbiguousTypeNames(context.CurrentModule, internalsVisible: true);
 			foreach (AssemblyNameReference r in context.CurrentModule.AssemblyReferences) {
+				System.Diagnostics.Debug.WriteLine(HMSF() + " AsmNamRef " + r.FullName);
 				AssemblyDefinition d = context.CurrentModule.AssemblyResolver.Resolve(r);
 				if (d != null)
 					FindAmbiguousTypeNames(d.MainModule, internalsVisible: false);
